@@ -98,6 +98,15 @@ bool isUsingSticksForArming(void)
     return isUsingSticksToArm;
 }
 
+static bool throttlePreventsArming;
+bool isThrottlePreventingArming()
+{
+  return throttlePreventsArming;
+}
+static void SetThrottlePreventsArming(bool throtlePrevents)
+{
+  throttlePreventsArming = throtlePrevents;
+}
 
 bool areSticksInApModePosition(uint16_t ap_mode)
 {
@@ -152,9 +161,14 @@ void processRcStickPositions(rxConfig_t *rxConfig, throttleStatus_e throttleStat
         if (rcModeIsActive(BOXARM)) {
             // Arming via ARM BOX
             if (throttleStatus == THROTTLE_LOW) {
+                SetThrottlePreventsArming(false);
                 if (ARMING_FLAG(OK_TO_ARM)) {
                     mwArm();
                 }
+            }
+            else if(!ARMING_FLAG(ARMED))
+            {
+                SetThrottlePreventsArming(true);
             }
         } else {
             // Disarming via ARM BOX

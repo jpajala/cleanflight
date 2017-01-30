@@ -262,11 +262,12 @@ static void updateRcCommands(void)
 
 typedef enum {
     ARM_PREV_NONE       = 0,
-    ARM_PREV_CLI        = 0x00205, //         0b1000000101  2 flashes - CLI active in the configurator
-    ARM_PREV_FAILSAFE   = 0x00815, //       0b100000010101  3 flashes - Failsafe mode
-    ARM_PREV_ANGLE      = 0x02055, //     0b10000001010101  4 flashes - Maximum arming angle exceeded
-    ARM_PREV_CALIB      = 0x08155, //   0b1000000101010101  5 flashes - Calibration active
-    ARM_PREV_OVERLOAD   = 0x20555  // 0b100000010101010101  6 flashes - System overload
+    ARM_PREV_CLI        = 0x00205, //           0b1000000101  2 flashes - CLI active in the configurator
+    ARM_PREV_FAILSAFE   = 0x00815, //         0b100000010101  3 flashes - Failsafe mode
+    ARM_PREV_ANGLE      = 0x02055, //       0b10000001010101  4 flashes - Maximum arming angle exceeded
+    ARM_PREV_CALIB      = 0x08155, //     0b1000000101010101  5 flashes - Calibration active
+    ARM_PREV_OVERLOAD   = 0x20555, //   0b100000010101010101  6 flashes - System overload
+    ARM_PREV_THROTTLE   = 0x81555, // 0b10000001010101010101  7 flashes - too high throttle
 } armingPreventedReason_e;
 
 armingPreventedReason_e getArmingPreventionBlinkMask(void)
@@ -286,6 +287,10 @@ armingPreventedReason_e getArmingPreventionBlinkMask(void)
     if (isSystemOverloaded()) {
         return ARM_PREV_OVERLOAD;
     }
+    if(isThrottlePreventingArming())
+      {
+        return ARM_PREV_THROTTLE;
+      }
     return ARM_PREV_NONE;
 }
 

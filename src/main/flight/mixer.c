@@ -60,6 +60,8 @@
 #include "fc/runtime_config.h"
 #include "fc/config.h"
 
+#define DEBUG_PRINT(...) if(theSerialPort) tfp_printf(__VA_ARGS__)
+
 //#define MIXER_DEBUG
 
 uint8_t motorCount;
@@ -420,6 +422,8 @@ uint16_t mixConstrainMotorForFailsafeCondition(uint8_t motorIndex)
 {
     return constrain(motor[motorIndex], motorConfig()->mincommand, motorConfig()->maxthrottle);
 }
+#include "../common/printf.h"
+serialPort_t* theSerialPort = NULL;
 
 void mixTable(void)
 {
@@ -457,7 +461,8 @@ void mixTable(void)
 #ifndef SKIP_3D_FLIGHT
         static int16_t throttlePrevious = 0;   // Store the last throttle direction for deadband transitions in 3D.
         // Find min and max throttle based on condition. Use rcData for 3D to prevent loss of power due to min_check
-        if (feature(FEATURE_3D)) {
+        if (feature(FEATURE_3D) && !feature(FEATURE_BOAT_IMU)) {
+            DEBUG_PRINT("non-boat\r\n");
             if (!ARMING_FLAG(ARMED)) throttlePrevious = rxConfig()->midrc; // When disarmed set to mid_rc. It always results in positive direction after arming.
 
             if ((rcData[THROTTLE] <= (rxConfig()->midrc - rcControlsConfig()->deadband3d_throttle))) { // Out of band handling
@@ -477,6 +482,7 @@ void mixTable(void)
             }
         } else {
 #endif
+            DEBUG_PRINT("boat?\r\n");
             throttle = rcCommand[THROTTLE];
             throttleMin = motorConfig()->minthrottle;
             throttleMax = motorConfig()->maxthrottle;
@@ -508,7 +514,7 @@ void mixTable(void)
                 motor[i] = mixConstrainMotorForFailsafeCondition(i);
             } else
 #ifndef SKIP_3D_FLIGHT
-            if (feature(FEATURE_3D)) {
+            if (feature(FEATURE_3D) && !feature(FEATURE_BOAT_IMU)) {
                 if (throttlePrevious <= (rxConfig()->midrc - rcControlsConfig()->deadband3d_throttle)) {
                     motor[i] = constrain(motor[i], motorConfig()->minthrottle, motor3DConfig()->deadband3d_low);
                 } else {
@@ -529,7 +535,7 @@ void mixTable(void)
                 axisPID[FD_ROLL] * currentMixer[i].roll +
                 -mixerConfig()->yaw_motor_direction * axisPID[FD_YAW] * currentMixer[i].yaw;
         }
-
+        if(theSerialPort) tfp_printf("a\r\n");
         // Find the maximum motor output.
         int16_t maxMotor = motor[0];
         for (i = 1; i < motorCount; i++) {
@@ -551,7 +557,8 @@ void mixTable(void)
             motor[i] -= maxThrottleDifference;
 
 #ifndef SKIP_3D_FLIGHT
-            if (feature(FEATURE_3D)) {
+            if (feature(FEATURE_3D) && !feature(FEATURE_BOAT_IMU)) {
+                if(theSerialPort) tfp_printf("b\r\n");
                 if (mixerConfig()->pid_at_min_throttle
                         || rcData[THROTTLE] <= rxConfig()->midrc - rcControlsConfig()->deadband3d_throttle
                         || rcData[THROTTLE] >= rxConfig()->midrc + rcControlsConfig()->deadband3d_throttle) {
@@ -570,6 +577,7 @@ void mixTable(void)
             } else
 #endif
             {
+                if(theSerialPort) tfp_printf("c\r\n");
                 if (isFailsafeActive) {
                     motor[i] = mixConstrainMotorForFailsafeCondition(i);
                 } else {

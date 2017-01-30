@@ -155,6 +155,7 @@ typedef struct armingConfig_s {
 PG_DECLARE(armingConfig_t, armingConfig);
 
 bool areUsingSticksToArm(void);
+bool isThrottlePreventingArming(void);
 
 bool areSticksInApModePosition(uint16_t ap_mode);
 struct rxConfig_s;

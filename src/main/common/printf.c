@@ -169,6 +169,7 @@ void init_printf(void *putp, void (*putf) (void *, char))
 
 int tfp_printf(const char *fmt, ...)
 {
+    if(!printfSerialPort) return 0; // can't print if serial port is not set.
     va_list va;
     va_start(va, fmt);
     int written = tfp_format(stdout_putp, stdout_putf, fmt, va);
@@ -186,6 +187,8 @@ int tfp_sprintf(char *s, const char *fmt, ...)
 {
     va_list va;
 
+    if(!printfSerialPort) return 0; // can't print if serial port is not set.
+
     va_start(va, fmt);
     int written = tfp_format(&s, putcp, fmt, va);
     putcp(&s, 0);
@@ -197,11 +200,13 @@ int tfp_sprintf(char *s, const char *fmt, ...)
 static void _putc(void *p, char c)
 {
     UNUSED(p);
+    if(!printfSerialPort) return; // can't print...
     serialWrite(printfSerialPort, c);
 }
 
 void printfSupportInit(void)
 {
+    printfSerialPort = NULL;
     init_printf(NULL, _putc);
 }
 

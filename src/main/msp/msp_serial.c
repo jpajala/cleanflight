@@ -267,6 +267,7 @@ static bool mspSerialProcessReceivedByte(mspPort_t *msp, uint8_t c)
     }
     return true;
 }
+#include "../../main/common/printf.h"
 
 void mspSerialProcess(void)
 {
@@ -283,6 +284,26 @@ void mspSerialProcess(void)
 
             if (!consumed) {
                 evaluateOtherData(msp->port, c);
+
+                // if we come out of the above function, and the unrecognized
+                // character was a dot, let's assign serial port for printf
+                if(c == '.')
+                {
+                    extern serialPort_t* theSerialPort ;
+                    if(theSerialPort)
+                    {
+                      printf("deassign serial port\r\n");
+                      setPrintfSerialPort(NULL);
+                      theSerialPort = NULL;
+                    }
+                    else
+                    {
+                      setPrintfSerialPort(msp->port);
+                      printf("serial port assigned\r\n");
+                      theSerialPort = msp->port;
+                    }
+                }
+
             }
 
             if (msp->c_state == MESSAGE_RECEIVED) {
