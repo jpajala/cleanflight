@@ -679,7 +679,7 @@ void subTaskPidController(void)
 {
     const uint32_t startTime = micros();
 
-    // PID - note this is function pointer set by setPIDController()
+    // Compute PID for all 3 axes. PID output will be stored into axisPID[].
     pidLuxFloat(
         pidProfile(),
         currentControlRateProfile,
