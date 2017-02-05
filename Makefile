@@ -328,7 +328,9 @@ FC_COMMON_SRC = \
 		   sensors/boardalignment.c \
 		   sensors/compass.c \
 		   sensors/gyro.c \
-		   sensors/initialisation.c
+		   sensors/initialisation.c \
+		   autopilot/controller.c \
+		   autopilot/pid.c
 
 OSD_SYSTEM_SRC = \
 		   config/feature.c \

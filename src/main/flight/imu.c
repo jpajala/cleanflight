@@ -56,6 +56,10 @@
 
 #include "fc/runtime_config.h"
 
+
+#include "autopilot/includes/controller.h"
+
+
 // the limit (in degrees/second) beyond which we stop integrating
 // omega_I. At larger spin rates the DCM PI controller can get 'dizzy'
 // which results in false gyro drift. See
@@ -144,6 +148,7 @@ void imuInit(void)
     accVelScale = 9.80665f / acc.acc_1G / 10000.0f;
 
     imuComputeRotationMatrix();
+    ctrl_init();
 }
 
 float calculateThrottleAngleScale(uint16_t throttle_correction_angle)

@@ -20,6 +20,7 @@
 #include <string.h>
 
 #include "build/build_config.h"
+#include "build/debugprint.h"
 #include <platform.h>
 #include "target.h"
 
@@ -44,6 +45,9 @@
 mspPostProcessFuncPtr mspPostProcessFn = NULL;
 
 mspPort_t mspPorts[MAX_MSP_PORT_COUNT];
+serialPort_t* theSerialPort;
+
+
 
 // assign serialPort to mspPort
 // free mspPort when serialPort is NULL
@@ -267,7 +271,36 @@ static bool mspSerialProcessReceivedByte(mspPort_t *msp, uint8_t c)
     }
     return true;
 }
-#include "../../main/common/printf.h"
+
+/**
+ * Checks the incoming character to decide if the serial port debug printing
+ * should be enabled or disabled. The character to enable or disable
+ * is a dot '.'.
+ *
+ * @param msp The serial port info.
+ * @param c The incoming character
+ * @return true if the c was consumed
+ */
+inline bool evaluateDebugPrintEnaDisa(mspPort_t *msp, uint8_t c)
+{
+  // if we come out of the above function, and the unrecognized
+  // character was a dot, let's assign serial port for printf
+  if(c == '.')
+  {
+      if(theSerialPort)
+      {
+        DEBUG_PRINT("deassign serial port\r\n");
+        setPrintfSerialPort(NULL);
+        theSerialPort = NULL;
+      }
+      else
+      {
+        setPrintfSerialPort(msp->port);
+        DEBUG_PRINT("serial port assigned\r\n");
+        theSerialPort = msp->port;
+      }
+  }
+}
 
 void mspSerialProcess(void)
 {
@@ -283,25 +316,9 @@ void mspSerialProcess(void)
             bool consumed = mspSerialProcessReceivedByte(msp, c);
 
             if (!consumed) {
-                evaluateOtherData(msp->port, c);
-
-                // if we come out of the above function, and the unrecognized
-                // character was a dot, let's assign serial port for printf
-                if(c == '.')
+                if(!evaluateDebugPrintEnaDisa(msp, c))
                 {
-                    extern serialPort_t* theSerialPort ;
-                    if(theSerialPort)
-                    {
-                      printf("deassign serial port\r\n");
-                      setPrintfSerialPort(NULL);
-                      theSerialPort = NULL;
-                    }
-                    else
-                    {
-                      setPrintfSerialPort(msp->port);
-                      printf("serial port assigned\r\n");
-                      theSerialPort = msp->port;
-                    }
+                  evaluateOtherData(msp->port, c);
                 }
 
             }
